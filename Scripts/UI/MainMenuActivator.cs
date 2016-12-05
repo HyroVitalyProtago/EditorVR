@@ -51,8 +51,18 @@ namespace UnityEngine.VR.Menus
 
 		[SerializeField]
 		Transform m_Icon;
+
 		[SerializeField]
 		Transform m_HighlightedPRS;
+
+		[SerializeField]
+		AudioSource m_Audiosource;
+
+		[SerializeField]
+		AudioClip m_ButtonHoverAudioClip;
+
+		[SerializeField]
+		AudioClip m_ButtonClickAudioClip;
 
 		Vector3 m_OriginalActivatorIconLocalScale;
 		Vector3 m_OriginalActivatorIconLocalPosition;
@@ -84,6 +94,8 @@ namespace UnityEngine.VR.Menus
 
 			m_HighlightCoroutine = null;
 			m_HighlightCoroutine = StartCoroutine(Highlight());
+
+			m_Audiosource.PlayOneShot(m_ButtonHoverAudioClip);
 		}
 
 		public void OnPointerExit(PointerEventData eventData)
@@ -107,6 +119,8 @@ namespace UnityEngine.VR.Menus
 		{
 			var rayEventData = eventData as RayEventData;
 			selected(rayOrigin, rayEventData != null ? rayEventData.rayOrigin : null);
+
+			m_Audiosource.PlayOneShot(m_ButtonClickAudioClip);
 		}
 
 		IEnumerator Highlight(bool transitionIn = true)

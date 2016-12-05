@@ -76,8 +76,8 @@ namespace UnityEngine.VR.Workspaces
 		public BaseHandle moveHandle { get { return m_MoveHandle; } }
 		[SerializeField]
 		BaseHandle m_MoveHandle;
-
 		public Transform topFaceContainer { get { return m_TopFaceContainer; } }
+
 		[SerializeField]
 		Transform m_TopFaceContainer;
 
@@ -141,6 +141,15 @@ namespace UnityEngine.VR.Workspaces
 
 		[SerializeField]
 		WorkspaceHighlight m_FrontHighlight;
+
+		[SerializeField]
+		AudioSource m_Audiosource;
+
+		[SerializeField]
+		AudioClip m_WorkspaceOpenAudioClip;
+
+		[SerializeField]
+		AudioClip m_WorkspaceCloseAudioClip;
 
 		public bool highlightsVisible
 		{
@@ -397,6 +406,8 @@ namespace UnityEngine.VR.Workspaces
 
 			m_TopFaceMaterial = U.Material.GetMaterialClone(m_TopFaceContainer.GetComponentInChildren<MeshRenderer>());
 			m_TopFaceMaterial.SetFloat("_Alpha", 1f);
+
+			m_Audiosource.PlayOneShot(m_WorkspaceOpenAudioClip);
 		}
 
 		IEnumerator Start()
@@ -490,6 +501,14 @@ namespace UnityEngine.VR.Workspaces
 		public void CloseClick()
 		{
 			closeClicked();
+
+			m_Audiosource.PlayOneShot(m_WorkspaceCloseAudioClip);
+		}
+
+		private IEnumerator CloseClickedCoroutine ()
+		{
+			while (m_Audiosource.isPlaying)
+				yield return null;
 		}
 
 		public void LockClick()
