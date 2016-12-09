@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine.InputNew;
 using UnityEngine.VR.Actions;
+using UnityEngine.VR.Extensions;
 using UnityEngine.VR.Tools;
 
 namespace UnityEngine.VR.Menus
@@ -16,6 +19,7 @@ namespace UnityEngine.VR.Menus
 		RadialMenuUI m_RadialMenuPrefab;
 		
 		RadialMenuUI m_RadialMenuUI;
+		Coroutine m_InputConsumptionCoroutine;
 
 		public List<ActionMenuData> menuActions
 		{
@@ -51,7 +55,7 @@ namespace UnityEngine.VR.Menus
 			get { return m_Visible; }
 			set
 			{
-				if (m_Visible != value)
+				if (m_Visible != value && m_InputConsumptionCoroutine == null)
 				{
 					m_Visible = value;
 					if (m_RadialMenuUI)
@@ -83,9 +87,9 @@ namespace UnityEngine.VR.Menus
 		public void ProcessInput(ActionMapInput input, Action<InputControl> consumeControl)
 		{
 			var radialMenuInput = (RadialMenuInput)input;
-			if (radialMenuInput == null || !visible)
+			if (radialMenuInput == null || !visible || m_InputConsumptionCoroutine != null)
 				return;
-			
+
 			var inputDirection = radialMenuInput.navigate.vector2;
 			m_RadialMenuUI.buttonInputDirection = inputDirection;
 
@@ -103,14 +107,37 @@ namespace UnityEngine.VR.Menus
 			}
 
 			if (radialMenuInput.selectItem.wasJustReleased)
+				this.RestartCoroutine(ref m_InputConsumptionCoroutine, ConsumeSelectItemInput(radialMenuInput, consumeControl));
+		}
+
+		IEnumerator ConsumeSelectItemInput(RadialMenuInput radialMenuInput, Action<InputControl> consumeControl)
+		{
+			consumeControl(radialMenuInput.selectItem);
+			m_RadialMenuUI.SelectionOccurred();
+			yield return null; // Wait a frame after performing the action, allowing for a possible clearing of selection
+
+			// Consume/block input for a given duration if the action performed cleared the selection
+			if (Selection.objects.Length == 0)
 			{
-				m_RadialMenuUI.SelectionOccurred();
+				if (m_RadialMenuUI)
+					m_RadialMenuUI.visible = false;
 
-				if (itemWasSelected != null)
-					itemWasSelected(rayOrigin);
-
-				consumeControl(radialMenuInput.selectItem);
+				const float kConsumeBlockDuration = 0.45f;
+				var currentDuration = 0f;
+				while (currentDuration < kConsumeBlockDuration)
+				{
+					currentDuration += Time.unscaledDeltaTime;
+					consumeControl(radialMenuInput.navigateX);
+					consumeControl(radialMenuInput.navigateY);
+					consumeControl(radialMenuInput.selectItem);
+					yield return null;
+				}
 			}
+
+			if (itemWasSelected != null)
+				itemWasSelected(rayOrigin);
+
+			m_InputConsumptionCoroutine = null;
 		}
 	}
 }

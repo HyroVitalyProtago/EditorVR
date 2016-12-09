@@ -124,6 +124,9 @@ namespace UnityEngine.VR.Menus
 		{
 			set
 			{
+				if (!visible)
+					return;
+
 				if (Mathf.Approximately(value.magnitude, 0) && !Mathf.Approximately(m_ButtonInputDirection.magnitude, 0))
 				{
 					foreach (var slot in m_RadialMenuSlots)
