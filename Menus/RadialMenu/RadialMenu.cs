@@ -122,7 +122,7 @@ namespace UnityEngine.VR.Menus
 				if (m_RadialMenuUI)
 					m_RadialMenuUI.visible = false;
 
-				const float kConsumeBlockDuration = 0.45f;
+				const float kConsumeBlockDuration = 0.8f;
 				var currentDuration = 0f;
 				while (currentDuration < kConsumeBlockDuration)
 				{
